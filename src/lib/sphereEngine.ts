@@ -5,9 +5,19 @@ import { HSK_COLORS } from './graphEngine';
 
 export const INITIAL_CHAR_BATCH = 100;
 export const LOAD_MORE_BATCH = 100;
+/** Globe wireframe + node spread multiplier (circle 200% of prior layout). */
+export const SPHERE_LAYOUT_SCALE = 2;
 export const DEFAULT_SPHERE_ZOOM = 1.35 * 1.2;
-export const SPHERE_GLOBE_RADIUS = 108 * 1.2;
-export const SPHERE_SPREAD = 118 * 1.2;
+export const SPHERE_GLOBE_RADIUS = 108 * 1.2 * SPHERE_LAYOUT_SCALE;
+export const SPHERE_SPREAD = 118 * 1.2 * SPHERE_LAYOUT_SCALE;
+
+/** Fixed character card size on the overview sphere (does not scale with globe). */
+export const CARD_BASE_WIDTH = 112;
+export const CARD_BASE_HEIGHT = 78;
+export const CARD_CHAR_FONT = 22;
+export const CARD_GLOSS_FONT = 9;
+export const CARD_THAI_FONT = 8;
+export const CARD_HSK_FONT = 8;
 
 const SPHERE_RADIUS = 1;
 
@@ -120,7 +130,7 @@ export function projectCharacters(
         thai: item.thai,
         screenX: cx + rotated.x * spread * perspective,
         screenY: cy + rotated.y * spread * perspective,
-        scale: Math.max(0.42, Math.min(1.15, perspective * densityScale * 0.92)),
+        scale: 0.88 + ((depth + 1) / 2) * 0.12,
         depth,
         visible,
       };

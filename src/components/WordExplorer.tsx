@@ -38,56 +38,104 @@ interface Props {
   onWordChange: (word: VocabularyWord) => void;
 }
 
+interface SlideLayout {
+  width: number;
+  height: number;
+  gapX: number;
+  gapY: number;
+  sideW: number;
+  centerW: number;
+  vertH: number;
+  centerH: number;
+  hanziSize: number;
+  tradSize: number;
+  pinyinSize: number;
+  bodySize: number;
+  previewCharSize: number;
+  previewLabelSize: number;
+}
+
 const AnimatedView = Animated.createAnimatedComponent(View);
 
 const SPRING = { damping: 22, stiffness: 240 };
 const SLIDE_MS = 220;
 
+function buildSlideLayout(width: number, height: number): SlideLayout {
+  const gapX = width * 0.05;
+  const gapY = height * 0.05;
+  const sideW = width * 0.1;
+  const centerW = width * 0.7;
+  const vertH = height * 0.1;
+  const centerH = height * 0.7;
+
+  return {
+    width,
+    height,
+    gapX,
+    gapY,
+    sideW,
+    centerW,
+    vertH,
+    centerH,
+    hanziSize: Math.min(centerW * 0.2, centerH * 0.16, 54),
+    tradSize: Math.min(centerW * 0.09, 26),
+    pinyinSize: Math.min(centerW * 0.065, 18),
+    bodySize: Math.min(centerW * 0.048, 15),
+    previewCharSize: Math.min(sideW * 0.38, vertH * 0.34, 22),
+    previewLabelSize: Math.min(sideW * 0.16, vertH * 0.14, 9),
+  };
+}
+
 function swipeThreshold(width: number, height: number): number {
-  return Math.min(width, height) * 0.18;
+  return Math.min(width, height) * 0.14;
 }
 
 function NavPreview({
   slot,
   direction,
   onPress,
-  compact,
+  layout,
+  style,
 }: {
   slot: DirectionalNav[NavDirection];
   direction: NavDirection;
   onPress: () => void;
-  compact: boolean;
+  layout: SlideLayout;
+  style?: object;
 }) {
   const arrow = DIRECTION_ARROWS[direction];
   const hskColor = slot ? HSK_COLORS[slot.word.hskLevel] ?? colors.border : colors.border;
-  const isSide = direction === 'left' || direction === 'right';
+  const isVertical = direction === 'up' || direction === 'down';
 
   return (
     <Pressable
       onPress={slot ? onPress : undefined}
       style={[
         styles.previewSlot,
-        compact && styles.previewSlotCompact,
-        isSide ? styles.previewSide : styles.previewVertical,
         !slot && styles.previewEmpty,
+        style,
       ]}
     >
-      <Text style={[styles.previewArrow, compact && styles.previewArrowCompact]}>{arrow}</Text>
+      <Text style={[styles.previewArrow, { fontSize: layout.previewLabelSize + 5 }]}>{arrow}</Text>
       {slot ? (
         <>
           <Text
-            style={[styles.previewChar, compact && styles.previewCharCompact]}
+            style={[styles.previewChar, { fontSize: layout.previewCharSize }]}
             numberOfLines={1}
+            adjustsFontSizeToFit
           >
             {slot.word.simplified}
           </Text>
-          {!compact ? (
-            <Text style={styles.previewGloss} numberOfLines={2}>
-              {truncateGloss(slot.word.english, 22)}
+          {isVertical ? (
+            <Text
+              style={[styles.previewGloss, { fontSize: layout.previewLabelSize }]}
+              numberOfLines={1}
+            >
+              {truncateGloss(slot.word.english, 14)}
             </Text>
           ) : null}
-          <Text style={[styles.previewShared, { color: hskColor }]}>
-            {compact ? slot.sharedChar : `共 ${slot.sharedChar}`}
+          <Text style={[styles.previewShared, { color: hskColor, fontSize: layout.previewLabelSize }]}>
+            {slot.sharedChar}
           </Text>
         </>
       ) : (
@@ -97,23 +145,23 @@ function NavPreview({
   );
 }
 
-function WordCenter({ word, compact }: { word: VocabularyWord; compact: boolean }) {
+function WordCenter({ word, layout }: { word: VocabularyWord; layout: SlideLayout }) {
   const hskColor = HSK_COLORS[word.hskLevel] ?? '#64748b';
 
   return (
-    <View style={[styles.centerCard, compact && styles.centerCardCompact]}>
+    <View style={styles.centerCard}>
       <View style={styles.centerHeader}>
-        <Text style={[styles.centerHanzi, compact && styles.centerHanziCompact]}>
-          {word.simplified}
-        </Text>
+        <Text style={[styles.centerHanzi, { fontSize: layout.hanziSize }]}>{word.simplified}</Text>
         <View style={[styles.hskBadge, { backgroundColor: hskColor }]}>
           <Text style={styles.hskBadgeText}>HSK {word.hskLevel}</Text>
         </View>
       </View>
-      <Text style={[styles.centerTraditional, compact && styles.centerTraditionalCompact]}>
+      <Text style={[styles.centerTraditional, { fontSize: layout.tradSize }]} numberOfLines={1}>
         {word.traditional}
       </Text>
-      <Text style={[styles.centerPinyin, compact && styles.centerPinyinCompact]}>{word.pinyin}</Text>
+      <Text style={[styles.centerPinyin, { fontSize: layout.pinyinSize }]} numberOfLines={1}>
+        {word.pinyin}
+      </Text>
 
       <ScrollView
         style={styles.centerScroll}
@@ -123,13 +171,13 @@ function WordCenter({ word, compact }: { word: VocabularyWord; compact: boolean 
       >
         <View style={styles.centerRow}>
           <Text style={styles.centerLabel}>English</Text>
-          <Text style={[styles.centerValue, compact && styles.centerValueCompact]}>
+          <Text style={[styles.centerValue, { fontSize: layout.bodySize, lineHeight: layout.bodySize * 1.45 }]}>
             {word.english}
           </Text>
         </View>
         <View style={styles.centerRow}>
           <Text style={styles.centerLabel}>Thai</Text>
-          <Text style={[styles.centerValue, compact && styles.centerValueCompact]}>
+          <Text style={[styles.centerValue, { fontSize: layout.bodySize, lineHeight: layout.bodySize * 1.45 }]}>
             {word.thai || '—'}
           </Text>
         </View>
@@ -140,11 +188,15 @@ function WordCenter({ word, compact }: { word: VocabularyWord; compact: boolean 
 
 export function WordExplorer({ visible, word, pool, graph, onClose, onWordChange }: Props) {
   const { width: screenW, height: screenH } = useWindowDimensions();
-  const compact = screenW < 420 || screenH < 740;
 
   const [displayWord, setDisplayWord] = useState<VocabularyWord | null>(word);
-  const [areaSize, setAreaSize] = useState({ width: screenW, height: screenH * 0.72 });
+  const [areaSize, setAreaSize] = useState({ width: screenW, height: screenH * 0.82 });
   const [incomingWord, setIncomingWord] = useState<VocabularyWord | null>(null);
+
+  const layout = useMemo(
+    () => buildSlideLayout(areaSize.width, areaSize.height),
+    [areaSize.width, areaSize.height],
+  );
 
   const slideX = useSharedValue(0);
   const slideY = useSharedValue(0);
@@ -192,11 +244,12 @@ export function WordExplorer({ visible, word, pool, graph, onClose, onWordChange
       isAnimating.value = true;
       setIncomingWord(slot.word);
 
-      const { width, height } = areaSize;
+      const slideW = layout.centerW + layout.gapX;
+      const slideH = layout.centerH + layout.gapY;
       const originX = slideX.value;
       const originY = slideY.value;
-      const deltaX = dir === 'left' ? -width : dir === 'right' ? width : 0;
-      const deltaY = dir === 'up' ? -height : dir === 'down' ? height : 0;
+      const deltaX = dir === 'left' ? -slideW : dir === 'right' ? slideW : 0;
+      const deltaY = dir === 'up' ? -slideH : dir === 'down' ? slideH : 0;
 
       incomingX.value = originX - deltaX;
       incomingY.value = originY - deltaY;
@@ -213,7 +266,10 @@ export function WordExplorer({ visible, word, pool, graph, onClose, onWordChange
     [
       displayWord,
       nav,
-      areaSize,
+      layout.centerW,
+      layout.gapX,
+      layout.centerH,
+      layout.gapY,
       slideX,
       slideY,
       incomingX,
@@ -232,19 +288,15 @@ export function WordExplorer({ visible, word, pool, graph, onClose, onWordChange
 
   const navRef = useRef(nav);
   navRef.current = nav;
-  const areaSizeRef = useRef(areaSize);
-  areaSizeRef.current = areaSize;
+  const layoutRef = useRef(layout);
+  layoutRef.current = layout;
 
   const handlePanEnd = useCallback(
     (translationX: number, translationY: number) => {
       if (isAnimating.value) return;
 
-      const { width, height } = areaSizeRef.current;
-      const dir = directionFromSwipe(
-        translationX,
-        translationY,
-        swipeThreshold(width, height),
-      );
+      const { width, height } = layoutRef.current;
+      const dir = directionFromSwipe(translationX, translationY, swipeThreshold(width, height));
 
       if (dir && navRef.current?.[dir]) {
         animateToNeighbor(dir);
@@ -319,7 +371,7 @@ export function WordExplorer({ visible, word, pool, graph, onClose, onWordChange
             <Text style={styles.closeBtnText}>✕</Text>
           </Pressable>
           <Text style={styles.topHint} numberOfLines={1}>
-            {compact ? 'Swipe ↑↓←→' : 'Swipe or tap arrows · keys on web'}
+            Swipe ↑↓←→ · 70% center · 10% neighbors
           </Text>
         </View>
 
@@ -331,26 +383,47 @@ export function WordExplorer({ visible, word, pool, graph, onClose, onWordChange
               setAreaSize({ width, height });
             }}
           >
-            <View style={styles.rowTop}>
-              <NavPreview slot={nav.up} direction="up" onPress={() => navigate('up')} compact={compact} />
+            <View style={{ height: layout.vertH, marginBottom: layout.gapY, alignItems: 'center' }}>
+              <NavPreview
+                slot={nav.up}
+                direction="up"
+                onPress={() => navigate('up')}
+                layout={layout}
+                style={{ width: layout.centerW, height: layout.vertH }}
+              />
             </View>
 
-            <View style={styles.rowMiddle}>
+            <View
+              style={{
+                height: layout.centerH,
+                marginBottom: layout.gapY,
+                flexDirection: 'row',
+                alignItems: 'stretch',
+              }}
+            >
               <NavPreview
                 slot={nav.left}
                 direction="left"
                 onPress={() => navigate('left')}
-                compact={compact}
+                layout={layout}
+                style={{ width: layout.sideW, height: layout.centerH, marginRight: layout.gapX }}
               />
 
-              <View style={styles.centerStage}>
+              <View
+                style={{
+                  width: layout.centerW,
+                  height: layout.centerH,
+                  overflow: 'hidden',
+                  borderRadius: 18,
+                }}
+              >
                 {incomingWord ? (
                   <AnimatedView style={[styles.centerLayer, incomingStyle]} pointerEvents="none">
-                    <WordCenter word={incomingWord} compact={compact} />
+                    <WordCenter word={incomingWord} layout={layout} />
                   </AnimatedView>
                 ) : null}
                 <AnimatedView style={[styles.centerLayer, currentStyle]}>
-                  <WordCenter word={displayWord} compact={compact} />
+                  <WordCenter word={displayWord} layout={layout} />
                 </AnimatedView>
               </View>
 
@@ -358,12 +431,19 @@ export function WordExplorer({ visible, word, pool, graph, onClose, onWordChange
                 slot={nav.right}
                 direction="right"
                 onPress={() => navigate('right')}
-                compact={compact}
+                layout={layout}
+                style={{ width: layout.sideW, height: layout.centerH, marginLeft: layout.gapX }}
               />
             </View>
 
-            <View style={styles.rowBottom}>
-              <NavPreview slot={nav.down} direction="down" onPress={() => navigate('down')} compact={compact} />
+            <View style={{ height: layout.vertH, alignItems: 'center' }}>
+              <NavPreview
+                slot={nav.down}
+                direction="down"
+                onPress={() => navigate('down')}
+                layout={layout}
+                style={{ width: layout.centerW, height: layout.vertH }}
+              />
             </View>
           </View>
         </GestureDetector>
@@ -408,32 +488,9 @@ const styles = StyleSheet.create({
   slideArea: {
     flex: 1,
     minHeight: 0,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    gap: 6,
-  },
-  rowTop: {
-    alignItems: 'center',
-    flexShrink: 0,
-  },
-  rowMiddle: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
+    paddingHorizontal: '2.5%',
+    paddingVertical: '2.5%',
     justifyContent: 'center',
-    gap: 6,
-    flex: 1,
-    minHeight: 0,
-  },
-  rowBottom: {
-    alignItems: 'center',
-    flexShrink: 0,
-  },
-  centerStage: {
-    flex: 1,
-    minWidth: 0,
-    minHeight: 0,
-    overflow: 'hidden',
-    borderRadius: 18,
   },
   centerLayer: {
     ...StyleSheet.absoluteFill,
@@ -442,63 +499,38 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1.5,
     borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    borderRadius: 14,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  previewSlotCompact: {
-    paddingHorizontal: 6,
-    paddingVertical: 6,
-    borderRadius: 10,
-  },
-  previewVertical: {
-    width: '100%',
-    maxWidth: 320,
-    minHeight: 56,
-  },
-  previewSide: {
-    width: 58,
-    maxWidth: 58,
-    minWidth: 58,
-    alignSelf: 'stretch',
+    overflow: 'hidden',
   },
   previewEmpty: {
-    opacity: 0.3,
+    opacity: 0.28,
   },
   previewArrow: {
     color: colors.accent,
-    fontSize: 14,
     fontWeight: '700',
-    marginBottom: 2,
-  },
-  previewArrowCompact: {
-    fontSize: 12,
-    marginBottom: 0,
+    marginBottom: 1,
   },
   previewChar: {
     color: colors.text,
-    fontSize: 22,
     fontWeight: '800',
-  },
-  previewCharCompact: {
-    fontSize: 18,
+    textAlign: 'center',
   },
   previewGloss: {
     color: colors.textMuted,
-    fontSize: 10,
     textAlign: 'center',
-    marginTop: 2,
+    marginTop: 1,
   },
   previewShared: {
-    fontSize: 9,
     fontWeight: '700',
-    marginTop: 2,
+    marginTop: 1,
   },
   previewEmptyText: {
     color: colors.textMuted,
-    fontSize: 16,
+    fontSize: 14,
   },
   centerCard: {
     flex: 1,
@@ -506,14 +538,13 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 2,
     borderColor: colors.accent,
-    padding: 16,
-    gap: 6,
-    minHeight: 0,
-  },
-  centerCardCompact: {
-    padding: 12,
+    padding: '4%',
     gap: 4,
-    borderRadius: 16,
+    minHeight: 0,
+    shadowColor: colors.accent,
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
   },
   centerHeader: {
     flexDirection: 'row',
@@ -523,12 +554,8 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   centerHanzi: {
-    fontSize: 48,
     fontWeight: '800',
     color: colors.text,
-  },
-  centerHanziCompact: {
-    fontSize: 38,
   },
   hskBadge: {
     paddingHorizontal: 8,
@@ -538,51 +565,37 @@ const styles = StyleSheet.create({
   hskBadgeText: {
     color: colors.white,
     fontWeight: '700',
-    fontSize: 11,
+    fontSize: 10,
   },
   centerTraditional: {
-    fontSize: 24,
     color: colors.text,
     textAlign: 'center',
     fontWeight: '600',
     flexShrink: 0,
   },
-  centerTraditionalCompact: {
-    fontSize: 20,
-  },
   centerPinyin: {
-    fontSize: 17,
     color: colors.accent,
     textAlign: 'center',
     flexShrink: 0,
-  },
-  centerPinyinCompact: {
-    fontSize: 15,
   },
   centerScroll: {
     flex: 1,
     minHeight: 0,
   },
   centerScrollContent: {
-    gap: 8,
-    paddingBottom: 4,
+    gap: 6,
+    paddingBottom: 2,
   },
   centerRow: {
-    gap: 3,
+    gap: 2,
   },
   centerLabel: {
     color: colors.textMuted,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
   centerValue: {
     color: colors.text,
-    fontSize: 15,
-    lineHeight: 21,
-  },
-  centerValueCompact: {
-    fontSize: 14,
-    lineHeight: 20,
   },
 });

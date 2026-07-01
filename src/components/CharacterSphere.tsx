@@ -24,6 +24,12 @@ import {
   ORBIT_WHEEL_SENSITIVITY,
   projectCharacters,
   SPHERE_GLOBE_RADIUS,
+  CARD_BASE_WIDTH,
+  CARD_BASE_HEIGHT,
+  CARD_CHAR_FONT,
+  CARD_GLOSS_FONT,
+  CARD_THAI_FONT,
+  CARD_HSK_FONT,
   truncateGloss,
 } from '../lib/sphereEngine';
 import { getAllCharacters, getAllWords } from '../lib/database';
@@ -120,7 +126,7 @@ export function CharacterSphere({ range, onSelectCharacter, onStatsChange }: Pro
     })
     .onUpdate((event) => {
       setRotation({
-        yaw: panStart.current.yaw - event.translationX * ORBIT_DRAG_SENSITIVITY,
+        yaw: panStart.current.yaw + event.translationX * ORBIT_DRAG_SENSITIVITY,
         pitch: panStart.current.pitch - event.translationY * ORBIT_DRAG_SENSITIVITY,
       });
     });
@@ -134,7 +140,7 @@ export function CharacterSphere({ range, onSelectCharacter, onStatsChange }: Pro
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
       setRotation((prev) => ({
-        yaw: prev.yaw - event.deltaX * ORBIT_WHEEL_SENSITIVITY,
+        yaw: prev.yaw + event.deltaX * ORBIT_WHEEL_SENSITIVITY,
         pitch: prev.pitch - event.deltaY * ORBIT_WHEEL_SENSITIVITY,
       }));
     };
@@ -240,8 +246,8 @@ export function CharacterSphere({ range, onSelectCharacter, onStatsChange }: Pro
           {projected.map((item) => {
             if (!item.visible) return null;
 
-            const cardWidth = 112 * item.scale;
-            const cardHeight = 78 * item.scale;
+            const cardWidth = CARD_BASE_WIDTH;
+            const cardHeight = CARD_BASE_HEIGHT;
             const hskColor = getCharacterColor(item.minHsk);
             const opacity = 0.48 + ((item.depth + 1) / 2) * 0.52;
             const english = truncateGloss(item.english, 18);
@@ -270,7 +276,7 @@ export function CharacterSphere({ range, onSelectCharacter, onStatsChange }: Pro
                 <Text
                   style={{
                     color: colors.text,
-                    fontSize: 22 * item.scale,
+                    fontSize: CARD_CHAR_FONT,
                     fontWeight: '800',
                     textAlign: 'center',
                   }}
@@ -280,7 +286,7 @@ export function CharacterSphere({ range, onSelectCharacter, onStatsChange }: Pro
                 <Text
                   style={{
                     color: colors.accent,
-                    fontSize: 9 * item.scale,
+                    fontSize: CARD_GLOSS_FONT,
                     textAlign: 'center',
                     marginTop: 2,
                   }}
@@ -291,7 +297,7 @@ export function CharacterSphere({ range, onSelectCharacter, onStatsChange }: Pro
                 <Text
                   style={{
                     color: colors.textMuted,
-                    fontSize: 8 * item.scale,
+                    fontSize: CARD_THAI_FONT,
                     textAlign: 'center',
                     marginTop: 1,
                   }}
@@ -302,7 +308,7 @@ export function CharacterSphere({ range, onSelectCharacter, onStatsChange }: Pro
                 <Text
                   style={{
                     color: hskColor,
-                    fontSize: 8 * item.scale,
+                    fontSize: CARD_HSK_FONT,
                     textAlign: 'center',
                     marginTop: 2,
                     fontWeight: '700',
