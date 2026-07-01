@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   LayoutChangeEvent,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -15,12 +16,14 @@ import {
   INITIAL_CHAR_BATCH,
   LOAD_MORE_BATCH,
   buildCharacterLinks,
-  clampPitch,
   clampZoom,
   dbCharactersToOverviewSphere,
   getCharacterColor,
   getSortedCharactersForRange,
+  ORBIT_DRAG_SENSITIVITY,
+  ORBIT_WHEEL_SENSITIVITY,
   projectCharacters,
+  SPHERE_GLOBE_RADIUS,
   truncateGloss,
 } from '../lib/sphereEngine';
 import { getAllCharacters, getAllWords } from '../lib/database';
@@ -104,6 +107,7 @@ export function CharacterSphere({ range, onSelectCharacter, onStatsChange }: Pro
     });
   }, [loadingMore, effectiveLoaded, totalAvailable]);
 
+  const orbitAreaRef = useRef<View>(null);
   const zoomRef = useRef(DEFAULT_SPHERE_ZOOM);
   const rotationRef = useRef<SphereRotation>(rotation);
   zoomRef.current = zoom;
@@ -116,10 +120,28 @@ export function CharacterSphere({ range, onSelectCharacter, onStatsChange }: Pro
     })
     .onUpdate((event) => {
       setRotation({
-        yaw: panStart.current.yaw + event.translationX * 0.007,
-        pitch: clampPitch(panStart.current.pitch + event.translationY * 0.007),
+        yaw: panStart.current.yaw - event.translationX * ORBIT_DRAG_SENSITIVITY,
+        pitch: panStart.current.pitch - event.translationY * ORBIT_DRAG_SENSITIVITY,
       });
     });
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    const node = orbitAreaRef.current as unknown as HTMLElement | null;
+    if (!node) return;
+
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      setRotation((prev) => ({
+        yaw: prev.yaw - event.deltaX * ORBIT_WHEEL_SENSITIVITY,
+        pitch: prev.pitch - event.deltaY * ORBIT_WHEEL_SENSITIVITY,
+      }));
+    };
+
+    node.addEventListener('wheel', onWheel, { passive: false });
+    return () => node.removeEventListener('wheel', onWheel);
+  }, []);
 
   const pinchBase = useRef(DEFAULT_SPHERE_ZOOM);
   const pinchGesture = Gesture.Pinch()
@@ -139,7 +161,7 @@ export function CharacterSphere({ range, onSelectCharacter, onStatsChange }: Pro
 
   const cx = viewport.width / 2;
   const cy = viewport.height / 2;
-  const globeRadius = 108 * zoom;
+  const globeRadius = SPHERE_GLOBE_RADIUS * zoom;
 
   if (totalAvailable === 0) {
     return (
@@ -152,7 +174,7 @@ export function CharacterSphere({ range, onSelectCharacter, onStatsChange }: Pro
   return (
     <View style={styles.graphArea} onLayout={onLayout}>
       <GestureDetector gesture={composed}>
-        <View style={{ flex: 1 }}>
+        <View ref={orbitAreaRef} style={{ flex: 1 }}>
           <Svg width={viewport.width} height={viewport.height} style={{ position: 'absolute' }}>
             <Circle
               cx={cx}
@@ -300,7 +322,7 @@ export function CharacterSphere({ range, onSelectCharacter, onStatsChange }: Pro
         ) : (
           <>
             <Text style={local.footerText}>
-              Drag to orbit · Pinch to zoom · {effectiveLoaded} characters on sphere
+              Drag or scroll to orbit · Pinch to zoom · {effectiveLoaded} characters on sphere
             </Text>
             {effectiveLoaded < totalAvailable ? (
               <Pressable onPress={loadMore} style={local.loadMoreBtn}>

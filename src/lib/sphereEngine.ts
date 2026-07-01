@@ -5,7 +5,9 @@ import { HSK_COLORS } from './graphEngine';
 
 export const INITIAL_CHAR_BATCH = 100;
 export const LOAD_MORE_BATCH = 100;
-export const DEFAULT_SPHERE_ZOOM = 1.35;
+export const DEFAULT_SPHERE_ZOOM = 1.35 * 1.2;
+export const SPHERE_GLOBE_RADIUS = 108 * 1.2;
+export const SPHERE_SPREAD = 118 * 1.2;
 
 const SPHERE_RADIUS = 1;
 
@@ -100,7 +102,7 @@ export function projectCharacters(
   const cy = viewport.height / 2;
   const focal = 320 / zoom;
   const densityScale = cardScaleForCount(characters.length);
-  const spread = 118 * densityScale;
+  const spread = SPHERE_SPREAD * densityScale;
 
   return characters
     .map((item) => {
@@ -145,12 +147,12 @@ export function buildCharacterLinks(characters: OverviewCharacter[]): Array<[str
   return links.filter(([a, b]) => charSet.has(a) && charSet.has(b)).slice(0, 120);
 }
 
-export function clampPitch(pitch: number): number {
-  return Math.max(-1.2, Math.min(1.2, pitch));
-}
-
 export function clampZoom(zoom: number): number {
   return Math.max(0.85, Math.min(2.8, zoom));
 }
+
+/** Orbit sensitivity — drag/wheel deltas map to radians (unlimited full spins). */
+export const ORBIT_DRAG_SENSITIVITY = 0.007;
+export const ORBIT_WHEEL_SENSITIVITY = 0.004;
 
 export { truncateGloss };

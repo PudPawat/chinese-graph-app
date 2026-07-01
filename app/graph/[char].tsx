@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import vocabularyData from '../../src/data/db/words.json';
 import { HskRangePicker, LayoutDirectionPicker } from '../../src/components/HskRangePicker';
@@ -161,7 +161,13 @@ export default function CharacterGraphScreen() {
         </Text>
       </View>
 
-      <View style={styles.controls}>
+      <ScrollView
+        style={local.controlsScroll}
+        contentContainerStyle={styles.controls}
+        keyboardShouldPersistTaps="handled"
+        nestedScrollEnabled
+        showsVerticalScrollIndicator={false}
+      >
         <View style={local.pageBar}>
           <Pressable
             onPress={goFirstPage}
@@ -259,7 +265,7 @@ export default function CharacterGraphScreen() {
           }}
         />
         <LayoutDirectionPicker direction={direction} onChange={setDirection} />
-      </View>
+      </ScrollView>
 
       <VocabularyGraph
         graph={graph}
@@ -304,6 +310,14 @@ export default function CharacterGraphScreen() {
 }
 
 const local = StyleSheet.create({
+  controlsScroll: {
+    flexGrow: 0,
+    flexShrink: 1,
+    maxHeight: 220,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
   pageBar: {
     flexDirection: 'row',
     alignItems: 'center',
