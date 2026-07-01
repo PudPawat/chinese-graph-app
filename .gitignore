@@ -36,6 +36,10 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# vocabulary database full export (app bundle in src/data/db is the runtime copy)
+database/generated/
+database/raw/
+
 # generated native folders
 /ios
 /android

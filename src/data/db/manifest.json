@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "generatedAt": "2026-07-01T12:38:13.980Z",
+  "source": "drkameleon-hsk3",
+  "counts": {
+    "words": 10969,
+    "characters": 2540,
+    "categories": 2785,
+    "wordCategoryLinks": 32907,
+    "relations": 109408
+  },
+  "hskLevels": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "notes": "HSK 3.0 levels 7-9 are stored as level 7. Level 8 reserved for future/custom words."
+}

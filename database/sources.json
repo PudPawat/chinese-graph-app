@@ -1,0 +1,56 @@
+{
+  "sources": [
+    {
+      "id": "drkameleon-hsk3",
+      "name": "Complete HSK Vocabulary (HSK 3.0)",
+      "url": "https://github.com/drkameleon/complete-hsk-vocabulary",
+      "license": "MIT",
+      "description": "HSK 3.0 wordlists with CC-CEDICT definitions, radicals, POS, frequency",
+      "levels": "1-7 (7-9 band combined in level 7 exclusive file)",
+      "importScript": "scripts/import-hsk.mjs"
+    },
+    {
+      "id": "krmanik-hsk3",
+      "name": "krmanik HSK 3.0 Words List",
+      "url": "https://github.com/krmanik/HSK-3.0-words-list",
+      "license": "Open",
+      "description": "HSK 1-9 word lists, grammar JSON, Anki deck data with frequency and zhuyin"
+    },
+    {
+      "id": "ivankra-hsk30",
+      "name": "ivankra HSK 3.0 CSV",
+      "url": "https://github.com/ivankra/hsk30",
+      "license": "MIT (data derived from official syllabus)",
+      "description": "11,092 terms with pinyin, POS, traditional, variants — cross-validated"
+    },
+    {
+      "id": "user-google-sheet",
+      "name": "User HSK Master Sheet",
+      "url": "https://docs.google.com/spreadsheets/d/1W2Id7ylps6RS8gZTxAgnnVb-JPocdi2eCUQU65avRC0/edit",
+      "license": "User-owned",
+      "description": "Custom sheet with Simplified, Traditional, Pinyin, English, HSK, Thai",
+      "importScript": "scripts/import-sheet.mjs"
+    },
+    {
+      "id": "punpuf-hsk30-tsv",
+      "name": "Punpuf HSK 3.0 TSV Pipeline",
+      "url": "https://github.com/Punpuf/hsk-syllabus-vocabulary-parser",
+      "license": "Open",
+      "description": "Official syllabus PDF extraction with CC-CEDICT definitions"
+    }
+  ],
+  "categoryKinds": {
+    "hsk": "HSK level grouping (HSK 1 … HSK 8)",
+    "radical": "Kangxi radical grouping from makemeahanzi / HSK data",
+    "character_root": "Words sharing the same first character (打*, 爱*, …)",
+    "topic": "Manual topic tags (food, travel, business, …)",
+    "grammar": "HSK grammar point linkage"
+  },
+  "relationTypes": {
+    "shared_char": "Words share at least one Chinese character",
+    "compound": "One word contains another as substring",
+    "synonym": "Similar meaning (manual or future NLP)",
+    "antonym": "Opposite meaning (manual)",
+    "topic": "Same semantic topic category"
+  }
+}
